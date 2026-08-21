@@ -1,9 +1,12 @@
 """Model-independent common-mask DWI evaluation (Independent INR baseline).
 
-Primary common mask (fixed before any INR/WLS prediction):
-  brain_mask AND WLS_valid_mask AND finite(observed_DWI over volumes)
+Official common mask (matches train_independent evaluation):
+  brain_mask AND WLS_valid_mask
 
 Prediction finiteness is NOT part of the common mask (avoids optimistic bias).
+
+WLS and INR MUST share the same sampled voxel indices (G2).
+Sampling matches evaluate_dwi_reconstruction: seed + max_voxels on common coords.
 """
 from __future__ import annotations
 
@@ -12,35 +15,30 @@ from typing import Any
 import numpy as np
 import torch
 
-from .coords import voxel_coords_normalized
+from .coords import masked_coords_and_indices, voxel_coords_normalized
 from .metrics_schema import dwi_reconstruction_metrics
 from .physics import dti_forward_signal
 
 DEFAULT_MAX_VOXELS = 131072
 DEFAULT_EVAL_SEED = 42
+COMMON_MASK_DEF = "brain & WLS_valid"
 
 
 def build_common_dwi_eval_mask(
     brain_mask: np.ndarray,
     wls_valid_mask: np.ndarray,
-    observed_dwi: np.ndarray,
+    observed_dwi: np.ndarray | None = None,
 ) -> np.ndarray:
-    """
-    Model-independent common mask.
-
-    observed_dwi: [X,Y,Z,N] — a voxel is finite-obs iff ALL volumes are finite.
-    """
+    """Official common mask: brain ∩ WLS_valid (reuse dti_fit valid_mask)."""
     brain = np.asarray(brain_mask, dtype=bool)
     valid = np.asarray(wls_valid_mask, dtype=bool)
-    obs = np.asarray(observed_dwi)
-    if obs.ndim != 4:
-        raise ValueError(f"observed_dwi must be 4D [X,Y,Z,N], got {obs.shape}")
-    if brain.shape != obs.shape[:3] or valid.shape != obs.shape[:3]:
-        raise ValueError(
-            f"mask/data spatial mismatch: brain={brain.shape} valid={valid.shape} dwi={obs.shape[:3]}"
-        )
-    finite_obs = np.all(np.isfinite(obs), axis=-1)
-    return brain & valid & finite_obs
+    if brain.shape != valid.shape:
+        raise ValueError(f"mask mismatch: brain={brain.shape} valid={valid.shape}")
+    if observed_dwi is not None:
+        obs = np.asarray(observed_dwi)
+        if obs.ndim != 4 or obs.shape[:3] != brain.shape:
+            raise ValueError(f"observed_dwi spatial mismatch: {getattr(obs, 'shape', None)}")
+    return brain & valid
 
 
 def sample_eval_voxel_indices(
@@ -48,17 +46,27 @@ def sample_eval_voxel_indices(
     *,
     max_voxels: int = DEFAULT_MAX_VOXELS,
     seed: int = DEFAULT_EVAL_SEED,
-) -> np.ndarray:
-    """Deterministic flat indices into X*Y*Z. Same policy for WLS and INR."""
-    flat = np.flatnonzero(np.asarray(common_mask, dtype=bool).reshape(-1))
-    if flat.size == 0:
-        return flat.astype(np.int64)
+) -> tuple[np.ndarray, np.ndarray, int]:
+    """
+    Same sampling as evaluate_dwi_reconstruction.
+
+    Returns:
+      sampled_flat_idx: [V] flat X*Y*Z indices (shared by WLS and INR)
+      sampled_coords:   [V,3] normalized coords
+      n_eval_voxels:    full common-mask count before sampling
+    """
+    coords_all, flat_all = masked_coords_and_indices(common_mask)
+    n_eval = int(coords_all.shape[0])
+    if n_eval == 0:
+        return (
+            np.zeros((0,), dtype=np.int64),
+            np.zeros((0, 3), dtype=np.float32),
+            0,
+        )
     max_voxels = int(max_voxels)
-    if flat.size <= max_voxels:
-        return flat.astype(np.int64)
     rng = np.random.default_rng(int(seed))
-    sel = rng.choice(flat.size, size=max_voxels, replace=False)
-    return np.sort(flat[sel].astype(np.int64))
+    sel = np.arange(n_eval) if n_eval <= max_voxels else rng.choice(n_eval, size=max_voxels, replace=False)
+    return flat_all[sel].astype(np.int64), coords_all[sel].astype(np.float32), n_eval
 
 
 def coords_from_flat_indices(shape_xyz: tuple[int, int, int], flat_idx: np.ndarray) -> np.ndarray:
@@ -174,57 +182,76 @@ def evaluate_wls_inr_dwi_common(
     dwi = np.ascontiguousarray(observed_dwi, dtype=np.float32)
     common = build_common_dwi_eval_mask(brain_mask, wls_valid_mask, dwi)
     n_common = int(np.count_nonzero(common))
-    flat_idx = sample_eval_voxel_indices(common, max_voxels=max_voxels, seed=seed)
-    n_eval = int(flat_idx.size)
+    flat_idx, coords, n_eval_full = sample_eval_voxel_indices(
+        common, max_voxels=max_voxels, seed=seed
+    )
+    n_sampled = int(flat_idx.size)
     n_vol = int(dwi.shape[-1])
     shape_xyz = (int(dwi.shape[0]), int(dwi.shape[1]), int(dwi.shape[2]))
 
-    if n_eval == 0:
+    if n_sampled == 0:
         return {
-            "n_common_dwi_voxels": 0,
-            "n_eval_dwi_voxels": 0,
+            "n_common_dwi_voxels": n_common,
+            "n_eval_dwi_voxels": n_eval_full,
+            "n_sampled_voxels": 0,
             "n_common_dwi_values": 0,
-            "WLS_DWI_RelMSE_common": float("nan"),
-            "WLS_DWI_MAE_common": float("nan"),
-            "INR_DWI_RelMSE_common": float("nan"),
-            "INR_DWI_MAE_common": float("nan"),
+            "WLS_DWI_RelMSE": float("nan"),
+            "INR_DWI_RelMSE": float("nan"),
+            "Delta": float("nan"),
+            "Ratio": float("nan"),
+            "WLS_DWI_MAE": float("nan"),
+            "INR_DWI_MAE": float("nan"),
             "n_wls_nonfinite": 0,
             "n_inr_nonfinite": 0,
             "eval_seed": int(seed),
             "max_voxels": int(max_voxels),
-            "common_mask_definition": "brain AND WLS_valid AND finite(observed_DWI)",
+            "common_mask_definition": COMMON_MASK_DEF,
         }
 
     obs = dwi.reshape(-1, n_vol)[flat_idx]
+    # Shared indices: WLS and INR evaluated on identical voxels.
     pred_wls = predict_dwi_wls(
         S0=wls_S0, D=wls_D, flat_idx=flat_idx, bvals=bvals, bvecs=bvecs, device=device
     )
-    pred_inr = predict_dwi_inr(
-        model=model,
-        shape_xyz=shape_xyz,
-        flat_idx=flat_idx,
-        bvals=bvals,
-        bvecs=bvecs,
-        device=device,
-    )
+    # Use precomputed coords (same order as flat_idx) for INR
+    model.eval()
+    bvals_t = torch.from_numpy(np.asarray(bvals, dtype=np.float32)).to(device)
+    bvecs_t = torch.from_numpy(np.asarray(bvecs, dtype=np.float32)).to(device)
+    preds: list[np.ndarray] = []
+    chunk = 65536
+    with torch.no_grad():
+        for i in range(0, n_sampled, chunk):
+            sl = slice(i, min(i + chunk, n_sampled))
+            xyz = torch.from_numpy(coords[sl]).to(device)
+            S0, D = model(xyz)
+            preds.append(dti_forward_signal(S0, D, bvals_t, bvecs_t).detach().float().cpu().numpy())
+    pred_inr = np.concatenate(preds, axis=0)
 
     n_wls_nf = count_nonfinite_entries(pred_wls)
     n_inr_nf = count_nonfinite_entries(pred_inr)
     m_wls = dwi_metrics_no_silent_drop(pred_wls, obs)
     m_inr = dwi_metrics_no_silent_drop(pred_inr, obs)
+    wls_r = float(m_wls["relative_mse"])
+    inr_r = float(m_inr["relative_mse"])
+    delta = inr_r - wls_r if np.isfinite(inr_r) and np.isfinite(wls_r) else float("nan")
+    ratio = (inr_r / wls_r) if np.isfinite(inr_r) and np.isfinite(wls_r) and wls_r > 0 else float("nan")
 
     return {
         "n_common_dwi_voxels": n_common,
-        "n_eval_dwi_voxels": n_eval,
-        "n_common_dwi_values": int(n_eval * n_vol),
-        "WLS_DWI_RelMSE_common": float(m_wls["relative_mse"]),
-        "WLS_DWI_MAE_common": float(m_wls["MAE"]),
-        "INR_DWI_RelMSE_common": float(m_inr["relative_mse"]),
-        "INR_DWI_MAE_common": float(m_inr["MAE"]),
+        "n_eval_dwi_voxels": n_eval_full,
+        "n_sampled_voxels": n_sampled,
+        "n_common_dwi_values": int(n_sampled * n_vol),
+        "WLS_DWI_RelMSE": wls_r,
+        "INR_DWI_RelMSE": inr_r,
+        "Delta": float(delta),
+        "Ratio": float(ratio),
+        "WLS_DWI_MAE": float(m_wls["MAE"]),
+        "INR_DWI_MAE": float(m_inr["MAE"]),
         "n_wls_nonfinite": n_wls_nf,
         "n_inr_nonfinite": n_inr_nf,
         "eval_seed": int(seed),
         "max_voxels": int(max_voxels),
-        "common_mask_definition": "brain AND WLS_valid AND finite(observed_DWI)",
+        "common_mask_definition": COMMON_MASK_DEF,
         "flat_idx": flat_idx,
+        "shape_xyz": shape_xyz,
     }
