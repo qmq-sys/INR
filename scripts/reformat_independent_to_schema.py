@@ -120,29 +120,44 @@ def main() -> None:
         ref = load_or_fit_wls_reference(
             bundle=bundle, trad_dir=trad_root / sid, cfg=cfg, skip_if_exists=True
         )
-        coords_np, flat_idx = masked_coords_and_indices(brain)
-        coords_t = torch.from_numpy(coords_np)
+        # Maps on brain support; DWI + params scored on common_mask = brain & WLS_valid.
+        train_coords_np, train_flat_idx = masked_coords_and_indices(brain)
+        train_coords_t = torch.from_numpy(train_coords_np)
         bvals_t = torch.from_numpy(bvals_u).to(device)
         bvecs_t = torch.from_numpy(bvecs_u).to(device)
 
+        common_mask = brain & ref["valid_mask"]
+        n_brain = int(np.count_nonzero(brain))
+        n_wls_valid = int(np.count_nonzero(ref["valid_mask"]))
+        n_common = int(np.count_nonzero(common_mask))
+        print(f"[EvalMask] brain: {n_brain}  WLS_valid: {n_wls_valid}  common: {n_common}")
+        if n_common == 0:
+            raise RuntimeError(f"{sid}: empty common_mask")
+        if n_common > n_brain or not np.all(~common_mask | brain):
+            raise RuntimeError(f"{sid}: common_mask not subset of brain")
+
+        eval_coords_np, eval_flat_idx = masked_coords_and_indices(common_mask)
+        eval_coords_t = torch.from_numpy(eval_coords_np)
+
         maps = predict_maps(
             model,
-            coords_t,
-            flat_idx,
+            train_coords_t,
+            train_flat_idx,
             bundle["data"].shape[:3],
             device,
             want_D=bool(args.save_tensor),
         )
-        param_metrics = parameter_agreement_vs_wls(maps, ref, brain & ref["valid_mask"])
+        param_metrics = parameter_agreement_vs_wls(maps, ref, common_mask)
         dwi_metrics = evaluate_dwi_reconstruction(
             model,
-            coords_t,
-            flat_idx,
+            eval_coords_t,
+            eval_flat_idx,
             dwi.reshape(-1, dwi.shape[-1]),
             bvals_t,
             bvecs_t,
             device,
             seed=42,
+            evaluation_mask="brain & WLS_valid",
         )
 
         # Prefer training stats from legacy run_meta if present
@@ -160,7 +175,14 @@ def main() -> None:
             parameter_metrics=param_metrics,
             dwi=dwi_metrics,
             training=training,
-            extra={"source_ckpt": str(ckpt_path)},
+            extra={
+                "source_ckpt": str(ckpt_path),
+                "training_mask": "brain",
+                "evaluation_mask": "brain & WLS_valid",
+                "n_brain_voxels": n_brain,
+                "n_wls_valid_voxels": n_wls_valid,
+                "n_common_voxels": n_common,
+            },
         )
         out_dir = out_root / sid
         save_subject_outputs(

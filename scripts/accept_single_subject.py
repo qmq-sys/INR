@@ -112,32 +112,51 @@ def main() -> None:
     ref = load_or_fit_wls_reference(
         bundle=bundle, trad_dir=trad_dir, cfg=cfg, skip_if_exists=True
     )
-    coords_np, flat_idx = masked_coords_and_indices(brain)
-    coords_t = torch.from_numpy(coords_np)
+    # Maps predicted on brain (full training support); metrics on common_mask.
+    train_coords_np, train_flat_idx = masked_coords_and_indices(brain)
+    train_coords_t = torch.from_numpy(train_coords_np)
     bvals_t = torch.from_numpy(bvals_u).to(device)
     bvecs_t = torch.from_numpy(bvecs_u).to(device)
     dwi_flat = dwi.reshape(-1, dwi.shape[-1])
 
+    common_mask = brain & ref["valid_mask"]
+    if not np.all(~common_mask | brain):
+        raise RuntimeError(f"{sid}: common_mask is not a subset of brain")
+    n_brain = int(np.count_nonzero(brain))
+    n_wls_valid = int(np.count_nonzero(ref["valid_mask"]))
+    n_common = int(np.count_nonzero(common_mask))
+    print(f"[EvalMask] brain: {n_brain}  WLS_valid: {n_wls_valid}  common: {n_common}")
+    if n_common == 0:
+        raise RuntimeError(f"{sid}: empty common_mask (brain & WLS_valid)")
+
+    eval_coords_np, eval_flat_idx = masked_coords_and_indices(common_mask)
+    eval_coords_t = torch.from_numpy(eval_coords_np)
+
     maps = predict_maps(
-        model, coords_t, flat_idx, bundle["data"].shape[:3], device, want_D=bool(args.save_maps)
+        model, train_coords_t, train_flat_idx, bundle["data"].shape[:3], device, want_D=bool(args.save_maps)
     )
-    param_metrics = parameter_agreement_vs_wls(maps, ref, brain & ref["valid_mask"])
+    param_metrics = parameter_agreement_vs_wls(maps, ref, common_mask)
     dwi_metrics = evaluate_dwi_reconstruction(
         model,
-        coords_t,
-        flat_idx,
+        eval_coords_t,
+        eval_flat_idx,
         dwi_flat,
         bvals_t,
         bvecs_t,
         device,
         max_voxels=131072,
         seed=42,
+        evaluation_mask="brain & WLS_valid",
     )
 
     report = {
         "subject_id": sid,
         "checkpoint": str(ckpt_path),
         "note": "FA/MD/AD/RD MAE are vs conventional WLS-DTI (reference agreement, not GT error)",
+        "evaluation_mask": "brain & WLS_valid",
+        "n_brain_voxels": n_brain,
+        "n_wls_valid_voxels": n_wls_valid,
+        "n_common_voxels": n_common,
         "parameter_vs_wls": {
             "FA_mae": param_metrics["FA"]["MAE"],
             "MD_mae": param_metrics["MD"]["MAE"],
@@ -152,7 +171,7 @@ def main() -> None:
         "dwi_reconstruction": dwi_metrics,
         "map_stats_in_valid_mask": {},
     }
-    m = brain & ref["valid_mask"]
+    m = common_mask
     for k in ("FA", "MD", "AD", "RD"):
         v = maps[k][m]
         r = ref[k][m]
@@ -177,7 +196,11 @@ def main() -> None:
         f"AD_mae={p['AD_mae']:.6f}  RD_mae={p['RD_mae']:.6f}"
     )
     d = report["dwi_reconstruction"]
-    print(f"  DWI     relative_mse={d['relative_mse']:.6e}  mae={d['MAE']:.6e}")
+    print(
+        f"  DWI     relative_mse={d['relative_mse']:.6e}  mae={d['MAE']:.6e}  "
+        f"n_eval={int(d.get('n_eval_voxels', -1))} n_sampled={int(d.get('n_sampled_voxels', -1))}  "
+        f"mask={d.get('evaluation_mask')}"
+    )
     print(f"  saved → {out_json}")
 
 

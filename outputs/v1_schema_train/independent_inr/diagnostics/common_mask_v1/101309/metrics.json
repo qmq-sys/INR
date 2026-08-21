@@ -1,0 +1,53 @@
+{
+  "subject_id": "101309",
+  "schema_version": 1,
+  "evaluation_protocol": "common_mask_v1",
+  "note": "parameter_metrics are agreement with conventional WLS-DTI reference (not ground-truth error). DWI RelMSE uses evaluation_protocol mask (default: brain & WLS_valid), fixed-seed subsample when n_mask_voxels > max_voxels.",
+  "parameter_metrics": {
+    "FA": {
+      "MAE": 0.22433722247449658,
+      "RMSE": 0.2947922916118808,
+      "Pearson": 0.03224113234079961
+    },
+    "MD": {
+      "MAE": 0.00018589137015632214,
+      "RMSE": 0.0003426857304023564,
+      "Pearson": 0.492381161695486
+    },
+    "AD": {
+      "MAE": 0.00031162476770741813,
+      "RMSE": 0.0004906689803096601,
+      "Pearson": 0.3695252421537603
+    },
+    "RD": {
+      "MAE": 0.0002273972246904622,
+      "RMSE": 0.00035319452370702163,
+      "Pearson": 0.4421845123877267
+    }
+  },
+  "dwi": {
+    "MAE": 406.248533635736,
+    "relative_mse": 0.06363655410688618,
+    "n_voxels": 131072,
+    "n_mask_voxels": 799510,
+    "n_values": 14155776,
+    "max_voxels": 131072,
+    "seed": 42,
+    "mask": "brain & WLS_valid"
+  },
+  "training": {
+    "final_loss": 0.05898117878455288,
+    "best_loss": 0.048389214604180684,
+    "best_epoch": 188,
+    "training_time_sec": 364.9452967643738,
+    "epochs": 200
+  },
+  "n_voxels": 799510,
+  "extra": {
+    "evaluation_protocol": "common_mask_v1",
+    "train_mask": "brain",
+    "source_ckpt": "E:\\BaiduNetdiskDownload\\INR\\outputs\\v1_schema_train\\independent_inr\\101309\\best.pt",
+    "legacy_DWI_RelMSE_brain_only": 0.06369501220188864,
+    "n_train_voxels": 799670
+  }
+}

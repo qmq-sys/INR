@@ -147,17 +147,29 @@ def evaluate_dwi_reconstruction(
     *,
     max_voxels: int = 131072,
     seed: int = 0,
+    evaluation_mask: str = "brain & WLS_valid",
 ) -> dict[str, float]:
-    """Global RelMSE = ||pred-obs||^2 / (||obs||^2 + eps); plus MAE."""
+    """Global RelMSE = ||pred-obs||^2 / (||obs||^2 + eps); plus MAE.
+
+    ``coords`` / ``flat_idx`` must already correspond to the evaluation mask
+    (official protocol: brain & WLS_valid). RelMSE math is unchanged.
+    """
     model.eval()
-    n = coords.shape[0]
+    n_eval = int(coords.shape[0])
     rng = np.random.default_rng(seed)
-    sel = np.arange(n) if n <= max_voxels else rng.choice(n, size=max_voxels, replace=False)
+    sel = np.arange(n_eval) if n_eval <= max_voxels else rng.choice(n_eval, size=max_voxels, replace=False)
+    n_sampled = int(sel.size)
     xyz = coords[sel].to(device)
     target = torch.from_numpy(dwi_flat[flat_idx[sel]]).to(device)
     S0, D = model(xyz)
     pred = dti_forward_signal(S0, D, bvals_t, bvecs_t)
-    return dwi_reconstruction_metrics(pred.detach().float().cpu().numpy(), target.detach().float().cpu().numpy())
+    out = dwi_reconstruction_metrics(pred.detach().float().cpu().numpy(), target.detach().float().cpu().numpy())
+    out["evaluation_mask"] = str(evaluation_mask)
+    out["max_voxels"] = float(max_voxels)
+    out["seed"] = float(seed)
+    out["n_eval_voxels"] = float(n_eval)
+    out["n_sampled_voxels"] = float(n_sampled)
+    return out
 
 
 def save_subject_outputs(
@@ -261,14 +273,15 @@ def train_one_independent_subject(
         skip_if_exists=skip_traditional_if_exists,
     )
 
-    coords_np, flat_idx = masked_coords_and_indices(brain)
+    # Training mask stays brain-only (unchanged). Evaluation uses common_mask below.
+    train_coords_np, train_flat_idx = masked_coords_and_indices(brain)
     dwi_flat = dwi.reshape(-1, dwi.shape[-1])
-    n_vox = int(coords_np.shape[0])
+    n_vox = int(train_coords_np.shape[0])
     print(f"[{tag}] {sid}: brain voxels={n_vox}")
 
     model = SpatialDTIINR(hidden=hidden, layers=layers, pe_freqs=pe_freqs).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
-    coords_t = torch.from_numpy(coords_np)
+    train_coords_t = torch.from_numpy(train_coords_np)
     bvals_t = torch.from_numpy(bvals_u).to(device)
     bvecs_t = torch.from_numpy(bvecs_u).to(device)
 
@@ -284,8 +297,8 @@ def train_one_independent_subject(
         losses: list[float] = []
         for _ in range(n_steps):
             sel = rng.integers(0, n_vox, size=batch_voxels, endpoint=False)
-            xyz = coords_t[sel].to(device)
-            idx = flat_idx[sel]
+            xyz = train_coords_t[sel].to(device)
+            idx = train_flat_idx[sel]
             target = torch.from_numpy(dwi_flat[idx]).to(device)
 
             S0, D = model(xyz)
@@ -315,23 +328,38 @@ def train_one_independent_subject(
 
     maps = predict_maps(
         model,
-        coords_t,
-        flat_idx,
+        train_coords_t,
+        train_flat_idx,
         data.shape[:3],
         device,
         want_D=bool(save_tensor_flag),
     )
-    eval_mask = brain & ref["valid_mask"]
-    param_metrics = parameter_agreement_vs_wls(maps, ref, eval_mask)
+    # Official evaluation protocol: FA/MD/AD/RD and DWI all use common_mask.
+    common_mask = brain & ref["valid_mask"]
+    if not np.all(~common_mask | brain):
+        raise RuntimeError(f"{sid}: common_mask is not a subset of brain")
+    n_brain = int(np.count_nonzero(brain))
+    n_wls_valid = int(np.count_nonzero(ref["valid_mask"]))
+    n_common = int(np.count_nonzero(common_mask))
+    print(f"[EvalMask] brain: {n_brain}  WLS_valid: {n_wls_valid}  common: {n_common}")
+    if n_common == 0:
+        raise RuntimeError(f"{sid}: empty common_mask (brain & WLS_valid)")
+    if n_common > n_brain:
+        raise RuntimeError(f"{sid}: common_mask larger than brain ({n_common} > {n_brain})")
+
+    eval_coords_np, eval_flat_idx = masked_coords_and_indices(common_mask)
+    eval_coords_t = torch.from_numpy(eval_coords_np)
+    param_metrics = parameter_agreement_vs_wls(maps, ref, common_mask)
     dwi_metrics = evaluate_dwi_reconstruction(
         model,
-        coords_t,
-        flat_idx,
+        eval_coords_t,
+        eval_flat_idx,
         dwi_flat,
         bvals_t,
         bvecs_t,
         device,
         seed=seed,
+        evaluation_mask="brain & WLS_valid",
     )
     train_time = time.time() - t0
     metrics_obj = build_metrics_json(
@@ -345,7 +373,15 @@ def train_one_independent_subject(
             "training_time_sec": float(train_time),
             "epochs": int(epochs),
         },
-        extra={"n_volumes": int(vol_m.sum()), "device": str(device)},
+        extra={
+            "n_volumes": int(vol_m.sum()),
+            "device": str(device),
+            "n_brain_voxels": n_brain,
+            "n_wls_valid_voxels": n_wls_valid,
+            "n_common_voxels": n_common,
+            "training_mask": "brain",
+            "evaluation_mask": "brain & WLS_valid",
+        },
     )
 
     ckpt_payload = {

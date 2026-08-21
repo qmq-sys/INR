@@ -1,0 +1,7 @@
+# 医学影像文件
+*.nii.gz
+*.nii
+*.nrrd
+*.mhd
+*.zraw
+*.raw

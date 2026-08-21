@@ -1,0 +1,12 @@
+{
+  "evaluation_protocol": "common_mask_v1",
+  "train_mask": "brain",
+  "eval_mask": "brain & WLS_valid",
+  "dwi_max_voxels": 131072,
+  "dwi_seed": 42,
+  "note": "Re-evaluation of existing best.pt (min training-loss). No retraining. Parameter and DWI metrics both use brain ∩ WLS_valid. DWI RelMSE is a fixed-seed subsample when n_mask_voxels > max_voxels. Original per-subject metrics.json under subject dirs are left unchanged.",
+  "n_subjects": 1,
+  "known_failures": [],
+  "aggregate_path": "E:\\BaiduNetdiskDownload\\INR\\outputs\\v1_schema_train\\independent_inr\\diagnostics\\common_mask_v1\\aggregate.csv",
+  "summary_path": "E:\\BaiduNetdiskDownload\\INR\\outputs\\v1_schema_train\\independent_inr\\diagnostics\\common_mask_v1\\summary.csv"
+}

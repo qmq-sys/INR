@@ -1,0 +1,53 @@
+{
+  "subject_id": "123925",
+  "schema_version": 1,
+  "note": "parameter_metrics are agreement with conventional WLS-DTI reference (not ground-truth error).",
+  "parameter_metrics": {
+    "FA": {
+      "MAE": 0.14713940835661712,
+      "RMSE": 0.2078071288361109,
+      "Pearson": 0.48858767733961567
+    },
+    "MD": {
+      "MAE": 0.00018451638316008487,
+      "RMSE": 0.000328297151374305,
+      "Pearson": 0.7428486162603767
+    },
+    "AD": {
+      "MAE": 0.0002713410107481973,
+      "RMSE": 0.0004031550717368531,
+      "Pearson": 0.7029486795830848
+    },
+    "RD": {
+      "MAE": 0.00020385420874304846,
+      "RMSE": 0.00032855671643199026,
+      "Pearson": 0.7451775434384795
+    }
+  },
+  "dwi": {
+    "MAE": 329.0678525555832,
+    "relative_mse": 0.06262567750423824,
+    "evaluation_mask": "brain & WLS_valid",
+    "max_voxels": 131072.0,
+    "seed": 42.0,
+    "n_eval_voxels": 685494.0,
+    "n_sampled_voxels": 131072.0
+  },
+  "training": {
+    "final_loss": 0.1620755521580577,
+    "best_loss": 0.10827216018168699,
+    "best_epoch": 192,
+    "training_time_sec": 154.03331089019775,
+    "epochs": 200
+  },
+  "n_voxels": 685494,
+  "extra": {
+    "source_ckpt": "E:\\BaiduNetdiskDownload\\INR\\outputs\\v1_schema_train\\independent_inr\\123925\\best.pt",
+    "training_mask": "brain",
+    "evaluation_mask": "brain & WLS_valid",
+    "n_brain_voxels": 685601,
+    "n_wls_valid_voxels": 685494,
+    "n_common_voxels": 685494,
+    "legacy_brain_only_DWI_RelMSE": 0.06286368958354013
+  }
+}
