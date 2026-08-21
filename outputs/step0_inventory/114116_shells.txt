@@ -1,0 +1,8 @@
+Subject 114116:
+  b=0     : 12
+  b=1000  : 60
+  b=2000  : 59
+  b=3000  : 60
+  dirs    : 179
+  type    : multi-shell
+  shape   : 145x174x145 x 191

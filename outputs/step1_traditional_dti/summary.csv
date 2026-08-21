@@ -1,0 +1,2 @@
+FA_mean,MD_mean,diffusion_dir,method,n_brain,n_valid,n_volumes_used,shells,subject_id
+0.2697025239467621,0.0008422680548392236,E:/BaiduNetdiskDownload/HCP/3T 146\101309\101309\T1w/Diffusion,DIPY_TensorModel_WLS,799670,799510,108,b0+b1000,101309

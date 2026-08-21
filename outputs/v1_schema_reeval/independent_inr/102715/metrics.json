@@ -1,0 +1,42 @@
+{
+  "subject_id": "102715",
+  "schema_version": 1,
+  "note": "parameter_metrics are agreement with conventional WLS-DTI reference (not ground-truth error).",
+  "parameter_metrics": {
+    "FA": {
+      "MAE": 0.18777565054557727,
+      "RMSE": 0.25766972659305554,
+      "Pearson": 0.08969621918955795
+    },
+    "MD": {
+      "MAE": 0.00024984222137195973,
+      "RMSE": 0.000450417668627301,
+      "Pearson": 0.5730665041803078
+    },
+    "AD": {
+      "MAE": 0.00037037057727182346,
+      "RMSE": 0.0005625810381197588,
+      "Pearson": 0.47948588002457054
+    },
+    "RD": {
+      "MAE": 0.00027979955340660066,
+      "RMSE": 0.00044710443194417745,
+      "Pearson": 0.5773001062570926
+    }
+  },
+  "dwi": {
+    "MAE": 448.01801812247345,
+    "relative_mse": 0.09821883181774524
+  },
+  "training": {
+    "final_loss": 0.38535006170201563,
+    "best_loss": 0.38535006170201563,
+    "best_epoch": 200,
+    "training_time_sec": 220.87903761863708,
+    "epochs": 200
+  },
+  "n_voxels": 940977,
+  "extra": {
+    "source_ckpt": "E:\\BaiduNetdiskDownload\\INR\\outputs\\experiment_02_independent\\102715\\best.pt"
+  }
+}

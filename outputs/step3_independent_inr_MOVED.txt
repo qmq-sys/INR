@@ -1,0 +1,3 @@
+Moved. Original Independent INR training is now:
+
+`outputs/v0_preschema/independent_inr/`

@@ -1,0 +1,13 @@
+[
+  {
+    "subject_id": "101309",
+    "method": "DIPY_TensorModel_WLS",
+    "shells": "b0+b1000",
+    "n_volumes_used": 108,
+    "n_brain": 799670,
+    "n_valid": 799510,
+    "FA_mean": 0.2697025239467621,
+    "MD_mean": 0.0008422680548392236,
+    "diffusion_dir": "E:/BaiduNetdiskDownload/HCP/3T 146\\101309\\101309\\T1w/Diffusion"
+  }
+]

@@ -1,0 +1,8 @@
+Subject 130720:
+  b=0     : 18
+  b=1000  : 90
+  b=2000  : 90
+  b=3000  : 90
+  dirs    : 270
+  type    : multi-shell
+  shape   : 145x174x145 x 288

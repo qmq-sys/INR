@@ -1,0 +1,47 @@
+{
+  "subject_id": "101309",
+  "checkpoint": "E:\\BaiduNetdiskDownload\\INR\\outputs\\step2_exp1_single_inr\\101309\\checkpoint.pt",
+  "note": "FA/MD/AD/RD MAE are vs conventional WLS-DTI (reference agreement, not GT error)",
+  "parameter_vs_wls": {
+    "FA_mae": 0.22450292215905124,
+    "MD_mae": 0.0001821884758940883,
+    "AD_mae": 0.000320472301990772,
+    "RD_mae": 0.00021276770084517784,
+    "FA_psnr": 10.610714420153148,
+    "MD_psnr": 33.26136621508268,
+    "AD_psnr": 33.393752154556466,
+    "RD_psnr": 32.51285759067613,
+    "n_voxels": 799510
+  },
+  "dwi_reconstruction": {
+    "dwi_relative_mse": 0.10107842087745667,
+    "dwi_mse": 409244.75,
+    "dwi_eval_voxels": 131072
+  },
+  "map_stats_in_valid_mask": {
+    "FA": {
+      "inr_mean": 0.08037736266851425,
+      "inr_std": 0.12777814269065857,
+      "wls_mean": 0.2697025239467621,
+      "wls_std": 0.1950405091047287
+    },
+    "MD": {
+      "inr_mean": 0.0007374041597358882,
+      "inr_std": 0.00023276636784430593,
+      "wls_mean": 0.0008422680548392236,
+      "wls_std": 0.00038022262742742896
+    },
+    "AD": {
+      "inr_mean": 0.0007807996007613838,
+      "inr_std": 0.0002527711330913007,
+      "wls_mean": 0.001064177486114204,
+      "wls_std": 0.0004268669872544706
+    },
+    "RD": {
+      "inr_mean": 0.0007157063810154796,
+      "inr_std": 0.00022848848311696202,
+      "wls_mean": 0.0007313132518902421,
+      "wls_std": 0.00039019607356749475
+    }
+  }
+}

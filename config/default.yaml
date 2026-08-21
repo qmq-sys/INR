@@ -1,0 +1,41 @@
+# Phase-A defaults for Shared-INR DTI roadmap
+hcp_root: "E:/BaiduNetdiskDownload/HCP/3T 146"
+subjects_file: "subjects_29.txt"
+subjects_yaml: "config/subjects.yaml"
+output_root: "outputs"
+
+# Keep pre-schema training, post-schema re-eval, and future schema-era training apart.
+experiments:
+  v0_preschema_single: "v0_preschema/single_inr"
+  v0_preschema_independent: "v0_preschema/independent_inr"
+  v1_schema_reeval_independent: "v1_schema_reeval/independent_inr"
+  v1_schema_train_single: "v1_schema_train/single_inr"
+  v1_schema_train_independent: "v1_schema_train/independent_inr"
+
+b0_threshold: 50.0
+shell_tol: 200.0
+dti_shells: [1000.0]
+
+# Fixed I/O schema (do not expand casually)
+# per subject: best.pt + maps.npz + metrics.json
+# per experiment: summary.csv + aggregate.csv
+save_nifti_default: false
+save_tensor_default: false
+
+_inr_train: &inr_train
+  epochs: 200
+  batch_voxels: 4096
+  lr: 1.0e-3
+  hidden: 128
+  layers: 4
+  pe_freqs: 8
+  log_every: 10
+  eval_every: 50
+  seed: 42
+
+exp1:
+  <<: *inr_train
+  subject_id: "101309"
+
+exp2:
+  <<: *inr_train

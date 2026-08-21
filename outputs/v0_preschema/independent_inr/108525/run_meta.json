@@ -1,0 +1,19 @@
+{
+  "subject_id": "108525",
+  "ok": true,
+  "error": "",
+  "device": "cuda",
+  "epochs": 200,
+  "batch_voxels": 4096,
+  "n_brain_voxels": 767938,
+  "n_volumes": 108,
+  "final_loss": 1.2399510591429599,
+  "sec": 178.1706519126892,
+  "FA_mae_vs_wls": 0.16070118463675243,
+  "MD_mae_vs_wls": 0.00021055311610387176,
+  "AD_mae_vs_wls": 0.00030754144770891377,
+  "RD_mae_vs_wls": 0.00022738779899290462,
+  "dwi_relative_mse": 1.520330548286438,
+  "dwi_mse": 441028.625,
+  "out_dir": "E:\\BaiduNetdiskDownload\\INR\\outputs\\step3_independent_inr\\108525"
+}

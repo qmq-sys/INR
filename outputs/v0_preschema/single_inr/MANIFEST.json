@@ -1,0 +1,7 @@
+{
+  "run_id": "v0_preschema_single",
+  "kind": "train",
+  "metrics_schema": "legacy_pre_v1",
+  "subject_id": "101309",
+  "retrained_after_schema_change": false
+}

@@ -1,0 +1,42 @@
+{
+  "subject_id": "124422",
+  "schema_version": 1,
+  "note": "parameter_metrics are agreement with conventional WLS-DTI reference (not ground-truth error).",
+  "parameter_metrics": {
+    "FA": {
+      "MAE": 0.4663619619917413,
+      "RMSE": 0.500797924357917,
+      "Pearson": 0.2048385725941425
+    },
+    "MD": {
+      "MAE": 0.0022774594834741794,
+      "RMSE": 0.00840075400251727,
+      "Pearson": 0.6395815103484588
+    },
+    "AD": {
+      "MAE": 0.0035801421327647256,
+      "RMSE": 0.01357387291322221,
+      "Pearson": 0.6256790645720237
+    },
+    "RD": {
+      "MAE": 0.0016633830132508779,
+      "RMSE": 0.006147027902846422,
+      "Pearson": 0.5885451093958264
+    }
+  },
+  "dwi": {
+    "MAE": 673.6883688857632,
+    "relative_mse": 0.138832103893229
+  },
+  "training": {
+    "final_loss": 0.1777928547319753,
+    "best_loss": 0.1777928547319753,
+    "best_epoch": 200,
+    "training_time_sec": 164.30823254585266,
+    "epochs": 200
+  },
+  "n_voxels": 731407,
+  "extra": {
+    "source_ckpt": "E:\\BaiduNetdiskDownload\\INR\\outputs\\step3_independent_inr\\124422\\checkpoint.pt"
+  }
+}

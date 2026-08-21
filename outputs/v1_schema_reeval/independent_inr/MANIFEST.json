@@ -1,0 +1,9 @@
+{
+  "run_id": "v1_schema_reeval_independent",
+  "kind": "eval_only",
+  "metrics_schema": "v1",
+  "retrained_after_schema_change": false,
+  "source_weights": "outputs/v0_preschema/independent_inr/<sid>/checkpoint.pt",
+  "description": "Re-evaluation of v0 Independent INR weights under the fixed v1 metrics schema. No new training.",
+  "n_subjects": 29
+}

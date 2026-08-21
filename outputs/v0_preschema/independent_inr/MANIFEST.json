@@ -1,0 +1,9 @@
+{
+  "run_id": "v0_preschema_independent",
+  "kind": "train",
+  "metrics_schema": "legacy_pre_v1",
+  "retrained_after_schema_change": false,
+  "description": "Original Independent INR × 29 training. Old dump: checkpoint.pt, many NIfTI, run_meta.json. Do not treat as the v1 schema tables.",
+  "n_subjects": 29,
+  "epochs": 200
+}

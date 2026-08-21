@@ -1,0 +1,43 @@
+{
+  "subject_id": "114419",
+  "schema_version": 1,
+  "note": "parameter_metrics are agreement with conventional WLS-DTI reference (not ground-truth error).",
+  "parameter_metrics": {
+    "FA": {
+      "MAE": 0.19793465653864495,
+      "RMSE": 0.2663533407803995,
+      "Pearson": 0.20307633418963297
+    },
+    "MD": {
+      "MAE": 0.000208108547061231,
+      "RMSE": 0.0004139893892002142,
+      "Pearson": 0.37488709941401077
+    },
+    "AD": {
+      "MAE": 0.000320950019755823,
+      "RMSE": 0.0005043253905572863,
+      "Pearson": 0.369274342511484
+    },
+    "RD": {
+      "MAE": 0.00024940598474307074,
+      "RMSE": 0.0004152600287396387,
+      "Pearson": 0.3687146871102106
+    }
+  },
+  "dwi": {
+    "MAE": 395.79330581627596,
+    "relative_mse": 0.10637778063468391
+  },
+  "training": {
+    "final_loss": 3.252478650828774,
+    "best_loss": 0.5204431758039688,
+    "best_epoch": 57,
+    "training_time_sec": 204.01017594337463,
+    "epochs": 200
+  },
+  "n_voxels": 923360,
+  "extra": {
+    "n_volumes": 108,
+    "device": "cuda"
+  }
+}

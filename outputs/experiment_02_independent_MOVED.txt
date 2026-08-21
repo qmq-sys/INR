@@ -1,0 +1,3 @@
+Moved. v1-schema re-eval of v0 weights is now:
+
+`outputs/v1_schema_reeval/independent_inr/`
