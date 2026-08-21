@@ -69,6 +69,16 @@ def sample_eval_voxel_indices(
     return flat_all[sel].astype(np.int64), coords_all[sel].astype(np.float32), n_eval
 
 
+def get_common_eval_indices(
+    common_mask: np.ndarray,
+    *,
+    max_voxels: int = DEFAULT_MAX_VOXELS,
+    seed: int = DEFAULT_EVAL_SEED,
+) -> tuple[np.ndarray, np.ndarray, int]:
+    """Public alias: identical sampled indices for WLS and INR DWI RelMSE."""
+    return sample_eval_voxel_indices(common_mask, max_voxels=max_voxels, seed=seed)
+
+
 def coords_from_flat_indices(shape_xyz: tuple[int, int, int], flat_idx: np.ndarray) -> np.ndarray:
     """Normalized [-1,1] coords for the given flat voxel indices."""
     all_coords = voxel_coords_normalized(shape_xyz)
