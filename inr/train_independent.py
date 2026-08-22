@@ -233,6 +233,8 @@ def train_one_independent_subject(
     save_nifti_flag: bool = False,
     save_tensor_flag: bool = False,
     tag: str = "IndependentINR",
+    train_volume_indices: np.ndarray | None = None,
+    sampling_fraction: float | None = None,
 ) -> dict[str, Any]:
     """
     Train a *fresh* SpatialDTIINR for one subject.
@@ -264,7 +266,15 @@ def train_one_independent_subject(
     dwi = data[..., vol_m].astype(np.float32)
     bvals_u = bvals[vol_m].astype(np.float32)
     bvecs_u = bvecs[vol_m].astype(np.float32)
-    print(f"[{tag}] {sid}: using {int(vol_m.sum())} volumes (b0+b1000)")
+    n_volumes_full = int(dwi.shape[-1])
+    if train_volume_indices is not None:
+        vi = np.asarray(train_volume_indices, dtype=np.int64)
+        dwi = dwi[..., vi]
+        bvals_u = bvals_u[vi]
+        bvecs_u = bvecs_u[vi]
+        print(f"[{tag}] {sid}: volume subset {vi.size}/{n_volumes_full} (fraction={sampling_fraction})")
+    else:
+        print(f"[{tag}] {sid}: using {int(vol_m.sum())} volumes (b0+b1000)")
 
     ref = load_or_fit_wls_reference(
         bundle=bundle,
@@ -374,7 +384,9 @@ def train_one_independent_subject(
             "epochs": int(epochs),
         },
         extra={
-            "n_volumes": int(vol_m.sum()),
+            "n_volumes": int(dwi.shape[-1]),
+            "n_volumes_full": int(n_volumes_full),
+            "sampling_fraction": sampling_fraction,
             "device": str(device),
             "n_brain_voxels": n_brain,
             "n_wls_valid_voxels": n_wls_valid,

@@ -1,0 +1,54 @@
+{
+  "subject_id": "114419",
+  "schema_version": 1,
+  "note": "parameter_metrics are agreement with conventional WLS-DTI reference (not ground-truth error).",
+  "parameter_metrics": {
+    "FA": {
+      "MAE": 0.21900002355468387,
+      "RMSE": 0.28726631154129956,
+      "Pearson": 0.14398071817341201
+    },
+    "MD": {
+      "MAE": 0.00023231874184385492,
+      "RMSE": 0.00042697798194324285,
+      "Pearson": 0.2999905444629034
+    },
+    "AD": {
+      "MAE": 0.00032214526696515433,
+      "RMSE": 0.0005094619582786384,
+      "Pearson": 0.30953257859793176
+    },
+    "RD": {
+      "MAE": 0.0002830311248497419,
+      "RMSE": 0.00043677684421224763,
+      "Pearson": 0.2842006791051148
+    }
+  },
+  "dwi": {
+    "MAE": 459.91218091759015,
+    "relative_mse": 0.1275460762047693,
+    "evaluation_mask": "brain & WLS_valid",
+    "max_voxels": 131072.0,
+    "seed": 42.0,
+    "n_eval_voxels": 923360.0,
+    "n_sampled_voxels": 131072.0
+  },
+  "training": {
+    "final_loss": 0.5836138841138585,
+    "best_loss": 0.44980027768660413,
+    "best_epoch": 135,
+    "training_time_sec": 5941.313187599182,
+    "epochs": 200
+  },
+  "n_voxels": 923360,
+  "extra": {
+    "subject_idx": 14,
+    "n_volumes": 108,
+    "n_brain_voxels": 923630,
+    "n_wls_valid_voxels": 923360,
+    "n_common_voxels": 923360,
+    "training_mask": "brain",
+    "evaluation_mask": "brain & WLS_valid",
+    "experiment": "shared_inr"
+  }
+}

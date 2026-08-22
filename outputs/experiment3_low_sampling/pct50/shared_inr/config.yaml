@@ -1,0 +1,19 @@
+shared_inr:
+  latent_dim: 32
+  hidden: 128
+  layers: 4
+  pe_freqs: 8
+  epochs: 2
+  batch_voxels: 4096
+  lr: 0.001
+  seed: 42
+  num_subjects: 1
+  sampling_fraction: 0.5
+  n_train_volumes: 54
+subjects:
+- '101309'
+subject_mapping:
+  '101309': 0
+evaluation_mask: brain & WLS_valid
+eval_seed: 42
+max_voxels: 131072

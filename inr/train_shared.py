@@ -74,6 +74,8 @@ def prepare_subject_data(
     cfg: dict[str, Any],
     trad_dir: Path,
     skip_traditional_if_exists: bool = True,
+    train_volume_indices: np.ndarray | None = None,
+    sampling_fraction: float | None = None,
 ) -> SubjectTrainingData:
     sid = str(subject_id).strip()
     bundle = load_hcp_subject(cfg["hcp_root"], sid, b0_threshold=float(cfg["b0_threshold"]))
@@ -93,6 +95,12 @@ def prepare_subject_data(
     dwi = data[..., vol_m].astype(np.float32)
     bvals_u = bvals[vol_m].astype(np.float32)
     bvecs_u = bvecs[vol_m].astype(np.float32)
+    n_volumes_full = int(dwi.shape[-1])
+    if train_volume_indices is not None:
+        vi = np.asarray(train_volume_indices, dtype=np.int64)
+        dwi = dwi[..., vi]
+        bvals_u = bvals_u[vi]
+        bvecs_u = bvecs_u[vi]
 
     ref = load_or_fit_wls_reference(
         bundle=bundle,
@@ -122,7 +130,7 @@ def prepare_subject_data(
         bvals_u=bvals_u,
         bvecs_u=bvecs_u,
         ref=ref,
-        n_volumes=int(vol_m.sum()),
+        n_volumes=int(dwi.shape[-1]),
     )
 
 
@@ -310,6 +318,8 @@ def train_shared_inr(
     skip_traditional_if_exists: bool = True,
     save_maps: bool = True,
     tag: str = "SharedINR",
+    train_volume_indices: np.ndarray | None = None,
+    sampling_fraction: float | None = None,
 ) -> dict[str, Any]:
     out_root = Path(out_root)
     out_root.mkdir(parents=True, exist_ok=True)
@@ -333,6 +343,8 @@ def train_shared_inr(
             cfg=cfg,
             trad_dir=trad_root / sid,
             skip_traditional_if_exists=skip_traditional_if_exists,
+            train_volume_indices=train_volume_indices,
+            sampling_fraction=sampling_fraction,
         )
         subjects.append(subj)
         print(
@@ -407,6 +419,8 @@ def train_shared_inr(
         "lr": float(lr),
         "seed": int(seed),
         "num_subjects": len(subject_ids),
+        "sampling_fraction": sampling_fraction,
+        "n_train_volumes": int(train_volume_indices.size) if train_volume_indices is not None else None,
     }
     ckpt = {
         "model": model.state_dict(),
@@ -443,6 +457,8 @@ def train_shared_inr(
     metrics_by_sid: dict[str, dict[str, Any]] = {}
     for subj in subjects:
         metrics_obj = evaluate_shared_subject(model=model, subj=subj, device=device, eval_seed=int(seed))
+        metrics_obj.setdefault("extra", {})
+        metrics_obj["extra"]["sampling_fraction"] = sampling_fraction
         metrics_obj["training"] = {
             "final_loss": final_loss,
             "best_loss": float(best_loss) if math.isfinite(best_loss) else final_loss,

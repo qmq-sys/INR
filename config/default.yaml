@@ -12,6 +12,7 @@ experiments:
   v1_schema_train_single: "v1_schema_train/single_inr"
   v1_schema_train_independent: "v1_schema_train/independent_inr"
   shared_inr: "shared_inr"
+  experiment3_low_sampling: "experiment3_low_sampling"
 
 b0_threshold: 50.0
 shell_tol: 200.0
@@ -55,3 +56,12 @@ shared_inr:
   seed: 42
   # Independent baseline for comparison (frozen eval_common_mask summary)
   independent_summary: "v1_schema_train/independent_inr/eval_common_mask/summary.csv"
+
+experiment3:
+  enabled: true
+  seed: 42
+  reference_subject: "101309"
+  train_levels: ["100%", "50%", "25%", "10%"]
+  independent_summary_100: "v1_schema_train/independent_inr/eval_common_mask/summary.csv"
+  shared_summary_100: "shared_inr/summary.json"
+  # inherits epochs/lr/batch/hidden/layers/pe_freqs from exp2 unless overridden below

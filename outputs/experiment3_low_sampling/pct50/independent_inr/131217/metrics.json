@@ -1,0 +1,55 @@
+{
+  "subject_id": "131217",
+  "schema_version": 1,
+  "note": "parameter_metrics are agreement with conventional WLS-DTI reference (not ground-truth error).",
+  "parameter_metrics": {
+    "FA": {
+      "MAE": 0.1732613979677662,
+      "RMSE": 0.24432334193392252,
+      "Pearson": 0.20211003467012528
+    },
+    "MD": {
+      "MAE": 0.00022012808236512334,
+      "RMSE": 0.0004005171784424007,
+      "Pearson": 0.6725200969428443
+    },
+    "AD": {
+      "MAE": 0.0003276559037441019,
+      "RMSE": 0.0005555239121709665,
+      "Pearson": 0.5123866486294519
+    },
+    "RD": {
+      "MAE": 0.0002496937494521177,
+      "RMSE": 0.00039500060621417766,
+      "Pearson": 0.6897895457579359
+    }
+  },
+  "dwi": {
+    "MAE": 425.0840094963895,
+    "relative_mse": 0.08213229036846711,
+    "evaluation_mask": "brain & WLS_valid",
+    "max_voxels": 131072.0,
+    "seed": 42.0,
+    "n_eval_voxels": 751792.0,
+    "n_sampled_voxels": 131072.0
+  },
+  "training": {
+    "final_loss": 0.29576161218321195,
+    "best_loss": 0.15289991317600335,
+    "best_epoch": 176,
+    "training_time_sec": 132.79543447494507,
+    "epochs": 200
+  },
+  "n_voxels": 751792,
+  "extra": {
+    "n_volumes": 54,
+    "n_volumes_full": 108,
+    "sampling_fraction": 0.5,
+    "device": "cuda",
+    "n_brain_voxels": 751907,
+    "n_wls_valid_voxels": 751792,
+    "n_common_voxels": 751792,
+    "training_mask": "brain",
+    "evaluation_mask": "brain & WLS_valid"
+  }
+}
