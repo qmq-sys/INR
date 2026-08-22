@@ -11,6 +11,7 @@ experiments:
   v1_schema_reeval_independent: "v1_schema_reeval/independent_inr"
   v1_schema_train_single: "v1_schema_train/single_inr"
   v1_schema_train_independent: "v1_schema_train/independent_inr"
+  shared_inr: "shared_inr"
 
 b0_threshold: 50.0
 shell_tol: 200.0
@@ -39,3 +40,18 @@ exp1:
 
 exp2:
   <<: *inr_train
+
+shared_inr:
+  enabled: true
+  latent_dim: 32
+  num_subjects: 29
+  epochs: 200
+  batch_voxels: 4096
+  lr: 1.0e-3
+  hidden: 128
+  layers: 4
+  pe_freqs: 8
+  log_every: 10
+  seed: 42
+  # Independent baseline for comparison (frozen eval_common_mask summary)
+  independent_summary: "v1_schema_train/independent_inr/eval_common_mask/summary.csv"
